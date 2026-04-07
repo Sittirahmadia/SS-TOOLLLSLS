@@ -820,38 +820,38 @@ Low-level pattern matching and string extraction
             """)
         
         def show_deleted_files_info(self):
-            self.deleted_output.setText("""
-🗑️ DELETED FILES RECOVERY
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-File system analysis for deleted file recovery
-
-🎯 Features:
-  • Deleted file detection
-  • Cluster analysis
-  • File signature scanning
-  • Carving techniques
-  • Fragment recovery
-
-📊 Recovery Methods:
-  • File system inode scanning
-  • MFT analysis (NTFS)
-  • Ext4 extent checking
-  • File carving
-  • Sector analysis
-
-🔍 Can Recover:
-  • Documents (PDF, DOCX, etc.)
-  • Images (JPG, PNG, etc.)
-  • Videos (MP4, AVI, etc.)
-  • Archives (ZIP, RAR, etc.)
-  • Executables (EXE, DLL, etc.)
-
-⚠️ Requirements:
-  • Administrator/sudo access
-  • Target partition unmounted (ideal)
-
-🚀 Performance: Analysis dependent on storage size
-            """)
+            try:
+                from scanner.deleted_files_advanced import DeletedFilesScanner
+                self.deleted_output.setText("🔍 Scanning for deleted files...\n")
+                
+                scanner = DeletedFilesScanner()
+                result = scanner.scan_system()
+                
+                output = "🗑️ DELETED FILES RECOVERY SCAN RESULTS\n"
+                output += "═" * 50 + "\n\n"
+                output += f"📊 Total Deleted Candidates: {result['total_deleted']}\n"
+                output += f"🎯 Risk Level: {result['risk_level']}\n\n"
+                
+                if result.get('temp'):
+                    output += f"📁 Temp Directory: {result['temp'].get('recovery_possible', 0)} files\n"
+                
+                if result.get('users'):
+                    output += f"👤 User Directory: {result['users'].get('recovery_possible', 0)} files\n"
+                
+                if result.get('windows'):
+                    output += f"🪟 Windows Directory: {result['windows'].get('recovery_possible', 0)} files\n"
+                
+                if result.get('summary'):
+                    output += "\n📈 Summary:\n"
+                    summary = result['summary']
+                    if summary:
+                        for key, value in summary.items():
+                            output += f"  {key}: {value}\n"
+                
+                output += "\n✅ Scan Complete"
+                self.deleted_output.setText(output)
+            except Exception as e:
+                self.deleted_output.setText(f"❌ Error: {str(e)}\n\n🗑️ DELETED FILES RECOVERY\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nFile system analysis for deleted file recovery\n\n🎯 Features:\n  • Deleted file detection\n  • File signature scanning\n  • Recovery scoring\n  • Fragment analysis\n\n📊 Detects:\n  • PDF, JPEG, PNG, GIF\n  • ZIP, DOCX, XLSX\n  • EXE, DLL files\n  • And many more...\n\n🔍 Indicators:\n  • Hidden files\n  • Recent modifications\n  • Zero-size files\n  • Suspicious locations\n\n⚠️ Requirements:\n  • Administrator/sudo access\n\n🚀 Performance: System-dependent")
 
 # ╔══════════════════════════════════════════════════════════════════════════╗
 # ║                       MAIN EXECUTION                                     ║
