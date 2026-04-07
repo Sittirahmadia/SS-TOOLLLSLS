@@ -51,7 +51,8 @@ scan_state = {
 
 @app.route("/")
 def index():
-    return render_template("index_red_dark.html")
+    # Use red-themed GUI for .exe builds
+    return render_template("index_red_exe.html")
 
 
 @app.route("/api/info")
