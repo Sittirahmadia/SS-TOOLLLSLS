@@ -1,5 +1,11 @@
 Flask==2.3.3
 Flask-CORS==4.0.0
-pywebview==5.1
-Werkzeug==2.3.7
 psutil==5.9.5
+requests==2.31.0
+pyinstaller==6.1.0
+pywebview==5.0
+Werkzeug==2.3.7
+click==8.1.7
+itsdangerous==2.1.2
+Jinja2==3.1.2
+MarkupSafe==2.1.3
