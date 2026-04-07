@@ -352,7 +352,7 @@ def scan_deleted_files() -> Dict:
             if "filename" in item:
                 detections = detect_cheats(item.get("filename", ""), item.get("filename", ""), item.get("original_path", ""))
                 if detections:
-                    item["detections"] = [{"name": d.name, "severity": d.severity, "category": d.category} for d in detections]
+                    item["detections"] = [{"name": d.signature_name, "severity": d.severity, "category": d.category} for d in detections]
                     item["source"] = "Recycle Bin"
                     flagged_items.append(item)
 
@@ -360,7 +360,7 @@ def scan_deleted_files() -> Dict:
             if "program_name" in item:
                 detections = detect_cheats(item.get("program_name", ""), item.get("filename", ""), item.get("path", ""))
                 if detections:
-                    item["detections"] = [{"name": d.name, "severity": d.severity, "category": d.category} for d in detections]
+                    item["detections"] = [{"name": d.signature_name, "severity": d.severity, "category": d.category} for d in detections]
                     item["source"] = "Prefetch"
                     flagged_items.append(item)
 
@@ -368,7 +368,7 @@ def scan_deleted_files() -> Dict:
             if "filename" in item:
                 detections = detect_cheats(item.get("filename", ""), item.get("filename", ""), item.get("path", ""))
                 if detections:
-                    item["detections"] = [{"name": d.name, "severity": d.severity, "category": d.category} for d in detections]
+                    item["detections"] = [{"name": d.signature_name, "severity": d.severity, "category": d.category} for d in detections]
                     item["source"] = "Temp"
                     flagged_items.append(item)
 

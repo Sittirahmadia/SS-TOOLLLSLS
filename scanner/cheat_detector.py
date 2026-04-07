@@ -496,11 +496,81 @@ class UltraFastDetector:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# COMPATIBILITY: DetectionResult (used by jar_inspector, string_scanner)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@dataclass
+class DetectionResult:
+    flagged: bool = False
+    signature_name: str = ""
+    category: str = ""
+    severity: str = "low"
+    description: str = ""
+    matched_patterns: List[str] = None
+    match_count: int = 0
+    file_path: str = ""
+    confidence: float = 0.0
+
+    def __post_init__(self):
+        if self.matched_patterns is None:
+            self.matched_patterns = []
+
+
+# Known mod package structures for authenticity verification
+_MOD_PACKAGES = {
+    'optifine': ['net/optifine', 'optifine/'],
+    'sodium': ['me/jellysquid/mods/sodium', 'net/caffeinemc'],
+    'iris': ['net/coderbot/iris', 'net/irisshaders'],
+    'lithium': ['me/jellysquid/mods/lithium'],
+    'fabric': ['net/fabricmc'],
+    'forge': ['net/minecraftforge'],
+    'jei': ['mezz/jei'],
+    'emi': ['dev/emi'],
+    'rei': ['me/shedaniel/rei'],
+    'journeymap': ['journeymap/'],
+    'xaeros': ['xaero/'],
+}
+
+
+def verify_mod_authenticity(filename: str, class_files: List[str]) -> Dict:
+    """Verify that a JAR claiming to be a known mod actually contains expected packages."""
+    result = {
+        'claimed_mod': None,
+        'is_authentic': False,
+        'expected_packages': [],
+        'found_matching': [],
+        'confidence': 0.0,
+    }
+    filename_lower = filename.lower()
+    for mod_name, packages in _MOD_PACKAGES.items():
+        if mod_name in filename_lower:
+            result['claimed_mod'] = mod_name
+            result['expected_packages'] = packages
+            for pkg in packages:
+                for cls in class_files:
+                    if cls.startswith(pkg):
+                        if pkg not in result['found_matching']:
+                            result['found_matching'].append(pkg)
+                        break
+            if result['found_matching']:
+                result['is_authentic'] = True
+                result['confidence'] = len(result['found_matching']) / len(packages)
+            break
+    if result['claimed_mod'] is None:
+        result['is_authentic'] = True
+        result['confidence'] = 1.0
+    return result
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # PUBLIC API FUNCTIONS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def is_whitelisted_mod(filename: str) -> bool:
     return any(w in filename.lower() for w in LEGITIMATE_MODS)
+
+# Alias for backward compatibility
+is_whitelisted = is_whitelisted_mod
 
 
 def get_all_signatures() -> List[CheatSignature]:
@@ -520,10 +590,24 @@ def detect_cheats_in_text(text: str, filename: str = "") -> List[CheatSignature]
     return detected
 
 
-def detect_cheats(text: str, filename: str = "", path: str = "") -> List[CheatSignature]:
-    """Wrapper used by deleted_files scanner."""
+def detect_cheats(text: str, filename: str = "", path: str = "") -> List[DetectionResult]:
+    """Detect cheats and return DetectionResult objects (used by jar_inspector, string_scanner, deleted_files)."""
     combined = f"{text} {filename} {path}"
-    return detect_cheats_in_text(combined, filename)
+    signatures = detect_cheats_in_text(combined, filename)
+    results = []
+    for sig in signatures:
+        results.append(DetectionResult(
+            flagged=True,
+            signature_name=sig.name,
+            category=sig.category,
+            severity=sig.severity,
+            description=sig.description,
+            matched_patterns=sig.patterns[:3],
+            match_count=1,
+            file_path=path,
+            confidence=0.9 if sig.severity == "CRITICAL" else 0.7 if sig.severity == "HIGH" else 0.5,
+        ))
+    return results
 
 
 def get_risk_level(signatures: List[CheatSignature]) -> str:

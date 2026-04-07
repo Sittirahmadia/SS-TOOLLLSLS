@@ -33,7 +33,7 @@ jobs:
 
       - name: Build EXE
         run: |
-          pyinstaller --name=SS-Tools-Native --onefile --windowed --add-data "templates;templates" --add-data "static;static" --add-data "scanner;scanner" --hidden-import=flask --hidden-import=flask_cors --hidden-import=psutil --hidden-import=webview --hidden-import=webview.platforms.edgechromium --hidden-import=clr --hidden-import=pythonnet --hidden-import=scanner --hidden-import=scanner.cheat_detector --hidden-import=scanner.jar_inspector --hidden-import=scanner.minecraft_scanner --hidden-import=scanner.deleted_files --hidden-import=scanner.process_scanner --hidden-import=scanner.chrome_scanner --hidden-import=scanner.kernel_checker --hidden-import=scanner.string_scanner --clean app.py
+          pyinstaller --name=SS-Tools-Native --onefile --windowed --add-data "scanner;scanner" --hidden-import=flask --hidden-import=flask_cors --hidden-import=psutil --hidden-import=scanner --hidden-import=scanner.cheat_detector --hidden-import=scanner.minecraft_scanner --hidden-import=scanner.deleted_files --hidden-import=scanner.chrome_scanner_enhanced --hidden-import=scanner.kernel_checker --hidden-import=scanner.ghost_detector --hidden-import=scanner.advanced_detector --clean app.py
 
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
@@ -62,7 +62,7 @@ jobs:
 
       - name: Build Binary
         run: |
-          pyinstaller --name=SS-Tools-Native --onefile --console --add-data "templates:templates" --add-data "static:static" --add-data "scanner:scanner" --hidden-import=flask --hidden-import=flask_cors --hidden-import=psutil --hidden-import=scanner --hidden-import=scanner.cheat_detector --hidden-import=scanner.jar_inspector --hidden-import=scanner.minecraft_scanner --hidden-import=scanner.deleted_files --hidden-import=scanner.process_scanner --hidden-import=scanner.chrome_scanner --hidden-import=scanner.kernel_checker --hidden-import=scanner.string_scanner --clean app.py
+          pyinstaller --name=SS-Tools-Native --onefile --console --add-data "scanner:scanner" --hidden-import=flask --hidden-import=flask_cors --hidden-import=psutil --hidden-import=scanner --hidden-import=scanner.cheat_detector --hidden-import=scanner.minecraft_scanner --hidden-import=scanner.deleted_files --hidden-import=scanner.chrome_scanner_enhanced --hidden-import=scanner.kernel_checker --hidden-import=scanner.ghost_detector --hidden-import=scanner.advanced_detector --clean app.py
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4

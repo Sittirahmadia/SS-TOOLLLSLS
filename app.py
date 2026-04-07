@@ -21,13 +21,13 @@ from flask_cors import CORS
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from scanner.cheat_detector import detect_cheats, get_all_signatures, is_whitelisted_mod as is_whitelisted
-from scanner.jar_inspector import inspect_jar, scan_mods_directory, read_jar_entries
-from scanner.minecraft_scanner import full_launcher_scan, scan_logs_for_cheats, collect_all_jars
+from scanner.minecraft_scanner import inspect_jar, scan_mods_directory, read_jar_entries
+from scanner.minecraft_scanner import full_launcher_scan, scan_logs_for_cheats, collect_all_jars, full_auto_scan, full_process_scan
 from scanner.deleted_files import scan_deleted_files
-from scanner.process_scanner_improved import full_process_scan
+# process_scanner now in minecraft_scanner
 from scanner.chrome_scanner_enhanced import scan_chrome_history
 from scanner.kernel_checker import full_kernel_check
-from scanner.string_scanner import (
+from scanner.minecraft_scanner import (
     scan_file_strings, scan_directory_for_strings,
     scan_task_manager_binaries, extract_strings
 )
@@ -244,7 +244,7 @@ def api_inspect_class():
             # Single class file
             with open(fpath, "rb") as cf:
                 class_bytes = cf.read()
-            from scanner.jar_inspector import extract_strings_from_class
+            from scanner.minecraft_scanner import extract_strings_from_class
             strings = extract_strings_from_class(class_bytes)
             all_strings = strings
             class_files = [safe_name]
@@ -257,7 +257,7 @@ def api_inspect_class():
         elif ext in (".jar", ".zip"):
             # JAR/ZIP — extract strings from all class files
             import zipfile
-            from scanner.jar_inspector import extract_strings_from_class
+            from scanner.minecraft_scanner import extract_strings_from_class
             try:
                 with zipfile.ZipFile(fpath, "r") as zf:
                     for entry in zf.namelist():
@@ -355,7 +355,7 @@ def api_minecraft_full_scan():
 
             elif ext == ".class":
                 # Single class file inspection
-                from scanner.jar_inspector import extract_strings_from_class
+                from scanner.minecraft_scanner import extract_strings_from_class
                 with open(fpath, "rb") as cf:
                     class_bytes = cf.read()
                 strings = extract_strings_from_class(class_bytes)
