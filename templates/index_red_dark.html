@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SS Tools Native - Minecraft Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a0a0a 0%, #2d0a0a 100%);
+            border-left: 4px solid #d32f2f;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            color: #ff5252;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(211, 47, 47, 0.3);
+        }
+
+        .subtitle {
+            color: #ff7070;
+            font-size: 0.95em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 100%);
+            border: 1px solid #8b0000;
+            border-left: 4px solid #d32f2f;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-left-color: #ff5252;
+            box-shadow: 0 6px 25px rgba(211, 47, 47, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .card h2 {
+            color: #ff5252;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card p {
+            color: #b0b0b0;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        button {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #ff5252 0%, #d32f2f 100%);
+            box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            background: #0d0d0d;
+            border: 1px solid #8b0000;
+            border-radius: 4px;
+            color: #e0e0e0;
+            margin: 8px 0;
+            font-family: monospace;
+        }
+
+        input[type="file"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #ff5252;
+            box-shadow: 0 0 10px rgba(211, 47, 47, 0.2);
+        }
+
+        .progress-bar {
+            background: #2a2a2a;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d32f2f, #ff5252);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .results {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 100%);
+            border: 1px solid #8b0000;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            background: #0d0d0d;
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 3px solid #ff5252;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .result-item.clean {
+            border-left-color: #4caf50;
+        }
+
+        .result-item.warning {
+            border-left-color: #ff9800;
+        }
+
+        .result-item.critical {
+            border-left-color: #d32f2f;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status.clean {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .status.warning {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+
+        .status.critical {
+            background: rgba(211, 47, 47, 0.2);
+            color: #ff5252;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #8b0000;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: #b0b0b0;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: #ff5252;
+            box-shadow: none;
+            background: transparent;
+            transform: none;
+        }
+
+        .tab-btn.active {
+            color: #ff5252;
+            border-bottom-color: #d32f2f;
+            box-shadow: none;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+        }
+
+        .alert.info {
+            background: rgba(33, 150, 243, 0.1);
+            border-left-color: #2196f3;
+            color: #90caf9;
+        }
+
+        .alert.warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-left-color: #ff9800;
+            color: #ffb74d;
+        }
+
+        .alert.danger {
+            background: rgba(211, 47, 47, 0.1);
+            border-left-color: #d32f2f;
+            color: #ff7070;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #ff5252;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .summary {
+            background: #0d0d0d;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            color: #b0b0b0;
+            font-size: 0.85em;
+        }
+
+        .summary-value {
+            color: #ff5252;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            color: #666;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px solid #8b0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ SS Tools Native</h1>
+            <p class="subtitle">Minecraft Screen Share Anti-Cheat Scanner v2.0</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('scanner')">Scanner</button>
+            <button class="tab-btn" onclick="switchTab('browser')">Browser History</button>
+            <button class="tab-btn" onclick="switchTab('processes')">Processes</button>
+            <button class="tab-btn" onclick="switchTab('full')">Full Scan</button>
+        </div>
+
+        <!-- Scanner Tab -->
+        <div id="scanner" class="tab-content active">
+            <div class="grid">
+                <div class="card">
+                    <h2>📦 Mod Scanner</h2>
+                    <p>Upload mod files (.jar, .zip) for deep analysis</p>
+                    <input type="file" id="modFiles" multiple accept=".jar,.zip,.class">
+                    <button onclick="scanMods()">Scan Mods</button>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Minecraft Full Scan</h2>
+                    <p>Deep scan all Minecraft installations</p>
+                    <button onclick="minecraftFullScan()">Start Full Scan</button>
+                </div>
+
+                <div class="card">
+                    <h2>⚙️ Auto Scan</h2>
+                    <p>Detect all launchers and scan mods</p>
+                    <button onclick="autoMinecraftScan()">Auto Detect & Scan</button>
+                </div>
+            </div>
+
+            <div id="scanResults"></div>
+        </div>
+
+        <!-- Browser Tab -->
+        <div id="browser" class="tab-content">
+            <div class="card">
+                <h2>🌐 Browser History Scanner</h2>
+                <p>Scan Chrome/Edge for suspicious websites and downloads</p>
+                <button onclick="scanBrowserHistory()">Scan Browser History</button>
+                <div id="browserResults"></div>
+            </div>
+        </div>
+
+        <!-- Processes Tab -->
+        <div id="processes" class="tab-content">
+            <div class="card">
+                <h2>🔍 Process Scanner</h2>
+                <p>Detect suspicious running processes</p>
+                <button onclick="scanProcesses()">Scan Processes</button>
+                <div id="processResults"></div>
+            </div>
+        </div>
+
+        <!-- Full Scan Tab -->
+        <div id="full" class="tab-content">
+            <div class="card">
+                <h2>🚀 Full Auto Scan</h2>
+                <p>Run comprehensive system scan (all modules)</p>
+                <button onclick="fullAutoScan()">Start Full Scan</button>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="fullProgress"></div>
+                </div>
+                <p id="scanStatus" style="text-align: center; color: #ff7070;"></p>
+                <div id="fullResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>SS Tools Native v2.0 | Minecraft Anti-Cheat Scanner</p>
+        <p style="font-size: 0.85em; margin-top: 10px;">🛡️ Protecting Screen Share Integrity</p>
+    </footer>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function scanMods() {
+            const files = document.getElementById('modFiles').files;
+            if (files.length === 0) {
+                alert('Please select mod files');
+                return;
+            }
+
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('files', file);
+            }
+
+            try {
+                const response = await fetch('/api/upload-mods', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                displayResults(data, 'scanResults');
+            } catch (error) {
+                alert('Scan error: ' + error.message);
+            }
+        }
+
+        async function minecraftFullScan() {
+            const files = document.getElementById('modFiles').files;
+            if (files.length === 0) {
+                alert('Please select mod files');
+                return;
+            }
+
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('files', file);
+            }
+
+            try {
+                const response = await fetch('/api/minecraft-full-scan', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                displayResults(data, 'scanResults');
+            } catch (error) {
+                alert('Scan error: ' + error.message);
+            }
+        }
+
+        async function autoMinecraftScan() {
+            document.getElementById('scanResults').innerHTML = '<p>Scanning...</p>';
+
+            try {
+                const response = await fetch('/api/scan/minecraft-auto');
+                const data = await response.json();
+                displayResults(data, 'scanResults');
+            } catch (error) {
+                alert('Scan error: ' + error.message);
+            }
+        }
+
+        async function scanBrowserHistory() {
+            document.getElementById('browserResults').innerHTML = '<p>Scanning browser history...</p>';
+
+            try {
+                const response = await fetch('/api/scan/chrome');
+                const data = await response.json();
+                displayBrowserResults(data);
+            } catch (error) {
+                alert('Scan error: ' + error.message);
+            }
+        }
+
+        async function scanProcesses() {
+            document.getElementById('processResults').innerHTML = '<p>Scanning processes...</p>';
+
+            try {
+                const response = await fetch('/api/scan/processes');
+                const data = await response.json();
+                displayProcessResults(data);
+            } catch (error) {
+                alert('Scan error: ' + error.message);
+            }
+        }
+
+        async function fullAutoScan() {
+            document.getElementById('fullProgress').style.width = '5%';
+            document.getElementById('scanStatus').textContent = 'Starting scan...';
+
+            try {
+                const response = await fetch('/api/scan/full-auto', {
+                    method: 'POST'
+                });
+
+                // Poll for progress
+                let completed = false;
+                while (!completed) {
+                    const statusResponse = await fetch('/api/scan/status');
+                    const status = await statusResponse.json();
+
+                    document.getElementById('fullProgress').style.width = status.progress + '%';
+                    document.getElementById('scanStatus').textContent = status.current_task;
+
+                    if (status.progress === 100) {
+                        completed = true;
+
+                        const resultsResponse = await fetch('/api/scan/results');
+                        const results = await resultsResponse.json();
+                        displayResults(results, 'fullResults');
+                    }
+
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            } catch (error) {
+                alert('Scan error: ' + error.message);
+            }
+        }
+
+        function displayResults(data, elementId) {
+            const html = `
+                <div class="results">
+                    <div class="summary">
+                        <div class="summary-item">
+                            <div class="summary-label">Total Files</div>
+                            <div class="summary-value">${data.total_files || data.total_scanned || 0}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Flagged</div>
+                            <div class="summary-value" style="color: #ff5252;">${data.total_flagged || data.flagged || 0}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Clean</div>
+                            <div class="summary-value" style="color: #4caf50;">${data.total_clean || data.safe || 0}</div>
+                        </div>
+                    </div>
+                    <p>Verdict: <span class="status ${(data.verdict === 'CLEAN' ? 'clean' : 'critical')}">${data.verdict || 'SCANNING'}</span></p>
+                    <pre style="background: #0d0d0d; padding: 10px; border-radius: 4px; overflow-x: auto; color: #90caf9;">${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+            document.getElementById(elementId).innerHTML = html;
+        }
+
+        function displayBrowserResults(data) {
+            let html = `<div class="results">`;
+
+            if (data.summary) {
+                html += `
+                    <div class="alert danger">
+                        <strong>Adult Content:</strong> ${data.summary.adult_content_count} sites visited
+                    </div>
+                `;
+            }
+
+            if (data.adult_sites && data.adult_sites.length > 0) {
+                html += `<h3 style="color: #ff5252; margin-top: 15px;">Adult Websites Visited:</h3>`;
+                data.adult_sites.forEach(site => {
+                    html += `<div class="result-item critical">${site.url} - ${site.timestamp}</div>`;
+                });
+            }
+
+            if (data.suspicious_urls && data.suspicious_urls.length > 0) {
+                html += `<h3 style="color: #ff9800; margin-top: 15px;">Suspicious URLs:</h3>`;
+                data.suspicious_urls.forEach(url => {
+                    html += `<div class="result-item warning">${url.url}</div>`;
+                });
+            }
+
+            html += `</div>`;
+            document.getElementById('browserResults').innerHTML = html;
+        }
+
+        function displayProcessResults(data) {
+            let html = `<div class="results">`;
+
+            if (data.summary) {
+                html += `
+                    <div class="alert ${data.summary.risk_level === 'CRITICAL' ? 'danger' : 'warning'}">
+                        Risk Level: <strong>${data.summary.risk_level}</strong>
+                    </div>
+                `;
+            }
+
+            if (data.suspicious_processes && data.suspicious_processes.length > 0) {
+                html += `<h3 style="color: #ff5252;">Suspicious Processes:</h3>`;
+                data.suspicious_processes.forEach(proc => {
+                    html += `<div class="result-item critical">${proc.name} (${proc.category})</div>`;
+                });
+            }
+
+            html += `</div>`;
+            document.getElementById('processResults').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

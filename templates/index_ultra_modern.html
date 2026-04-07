@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SS Tools - Ultra Modern Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ff5252;
+            --primary-dark: #ff1744;
+            --primary-light: #ff6b6b;
+            --bg: #0a0a0a;
+            --surface: #1a1a1a;
+            --surface-light: #252525;
+            --text: #ffffff;
+            --text-muted: #a0a0a0;
+            --accent: #00d4ff;
+            --success: #4caf50;
+            --danger: #ff5252;
+            --warning: #ff9800;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            height: 100vh;
+        }
+
+        /* ═══ Sidebar ═══ */
+        .sidebar {
+            background: linear-gradient(180deg, var(--surface) 0%, #0f0f0f 100%);
+            border-right: 1px solid rgba(255, 82, 82, 0.1);
+            padding: 24px 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            padding: 0 24px 32px;
+            border-bottom: 2px solid var(--primary);
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            color: var(--primary);
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .logo p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .nav-section {
+            padding: 16px 12px;
+            margin: 8px 0;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding: 0 12px 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            margin: 4px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--primary);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 82, 82, 0.1);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(255, 82, 82, 0.15);
+            color: var(--primary);
+        }
+
+        .nav-item.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        /* ═══ Main Content ═══ */
+        .main {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(90deg, var(--surface) 0%, var(--surface-light) 100%);
+            border-bottom: 1px solid rgba(255, 82, 82, 0.1);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .header-left h2 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: rgba(255, 82, 82, 0.1);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 82, 82, 0.2);
+        }
+
+        /* ═══ Content Area ═══ */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid rgba(255, 82, 82, 0.1);
+            padding-bottom: 16px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }
+
+        .tab:hover {
+            background: rgba(255, 82, 82, 0.1);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            background: rgba(255, 82, 82, 0.15);
+        }
+
+        .tab.active::after {
+            transform: scaleX(1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══ Cards ═══ */
+        .card {
+            background: var(--surface);
+            border: 1px solid rgba(255, 82, 82, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 82, 82, 0.3);
+            box-shadow: 0 8px 24px rgba(255, 82, 82, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .card-description {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ═══ Buttons ═══ */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(255, 82, 82, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--surface-light);
+            color: var(--text);
+            border: 1px solid rgba(255, 82, 82, 0.2);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            background: rgba(255, 82, 82, 0.1);
+        }
+
+        /* ═══ Progress Bar ═══ */
+        .progress-container {
+            margin: 16px 0;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--surface-light);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ═══ Detection Result ═══ */
+        .detection-result {
+            background: rgba(255, 82, 82, 0.05);
+            border: 1px solid rgba(255, 82, 82, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .detection-result.critical {
+            border-color: var(--danger);
+            background: rgba(255, 82, 82, 0.1);
+        }
+
+        .detection-result.high {
+            border-color: var(--warning);
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .detection-result.clean {
+            border-color: var(--success);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .detection-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .detection-badge.critical {
+            background: var(--danger);
+            color: white;
+        }
+
+        .detection-badge.high {
+            background: var(--warning);
+            color: white;
+        }
+
+        .detection-badge.clean {
+            background: var(--success);
+            color: white;
+        }
+
+        /* ═══ File List ═══ */
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .file-item {
+            background: var(--surface-light);
+            padding: 12px 16px;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .file-item.detected {
+            border-left-color: var(--danger);
+            background: rgba(255, 82, 82, 0.1);
+        }
+
+        /* ═══ Input ═══ */
+        input[type="text"],
+        input[type="file"],
+        select {
+            background: var(--surface-light);
+            border: 1px solid rgba(255, 82, 82, 0.2);
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(255, 82, 82, 0.2);
+            outline: none;
+        }
+
+        /* ═══ Scrollbar ═══ */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
+        }
+
+        /* ═══ Loading Animation ═══ */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        /* ═══ Grid ═══ */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* ═══ Responsive ═══ */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .content {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>SS Tools</h1>
+                <p>Ultra Modern Scanner v3.0</p>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Scanning</div>
+                <div class="nav-item active" onclick="switchTab('home')">
+                    <span class="nav-icon">⚡</span>
+                    <span>Quick Scan</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('minecraft')">
+                    <span class="nav-icon">🎮</span>
+                    <span>Minecraft Scan</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('jar')">
+                    <span class="nav-icon">📦</span>
+                    <span>JAR Inspector</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('browser')">
+                    <span class="nav-icon">🌐</span>
+                    <span>Browser History</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('processes')">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Process Scan</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Full Scan</div>
+                <div class="nav-item" onclick="switchTab('fullscan')">
+                    <span class="nav-icon">🚀</span>
+                    <span>Auto Full Scan</span>
+                </div>
+                <div class="nav-item" onclick="switchTab('ghost')">
+                    <span class="nav-icon">👻</span>
+                    <span>Ghost Detection</span>
+                </div>
+            </div>
+
+            <div style="margin-top: auto; padding: 16px 12px; border-top: 1px solid rgba(255,82,82,0.1);">
+                <div class="stat-badge" style="width: 100%; text-align: center;">
+                    <div style="font-size: 14px; font-weight: 700; color: var(--primary);" id="totalScans">0</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">Total Scans</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main">
+            <div class="header">
+                <div class="header-left">
+                    <h2 id="pageTitle">Quick Scan</h2>
+                </div>
+                <div class="header-right">
+                    <div class="stat-badge">
+                        <span id="statusText">Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Home Tab -->
+                <div id="home" class="tab-content active">
+                    <div class="grid">
+                        <div class="card">
+                            <div class="card-title">🚀 Quick Minecraft Scan</div>
+                            <div class="card-description">Scan all Minecraft launchers instantly</div>
+                            <button class="btn btn-primary" onclick="quickMinecraftScan()" style="margin-top: 16px;">
+                                <span class="spinner" id="mcSpinner" style="display:none;">⟳</span>
+                                Start Scan
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">👻 Ghost Client Check</div>
+                            <div class="card-description">Detect Argon, Wurst+, instant-speed clients</div>
+                            <button class="btn btn-primary" onclick="switchTab('ghost')" style="margin-top: 16px;">
+                                Check Ghost Clients
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">📦 JAR Inspector</div>
+                            <div class="card-description">Upload and inspect JAR files</div>
+                            <input type="file" id="jarFile" accept=".jar" style="width: 100%; margin-top: 12px;">
+                            <button class="btn btn-primary" onclick="inspectJar()" style="margin-top: 12px; width: 100%;">
+                                Inspect JAR
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">🚀 Full Auto Scan</div>
+                            <div class="card-description">Complete system scan (fast)</div>
+                            <button class="btn btn-primary" onclick="startFullAutoScan()" style="margin-top: 16px;">
+                                Full Scan Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Recent Results</div>
+                        <div id="homeResults" style="color: var(--text-muted); font-size: 13px;">No scans yet</div>
+                    </div>
+                </div>
+
+                <!-- Minecraft Tab -->
+                <div id="minecraft" class="tab-content">
+                    <div class="card">
+                        <div class="card-title">Minecraft Launcher Detection</div>
+                        <div class="card-description">Ultra-fast parallel scanning of all Minecraft launchers</div>
+                        <button class="btn btn-primary" onclick="quickMinecraftScan()" style="margin-top: 16px;">
+                            <span class="spinner" id="mcSpinner2" style="display:none;">⟳</span>
+                            Scan Launchers
+                        </button>
+                    </div>
+                    <div class="progress-container" id="mcProgress" style="display:none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="mcProgressFill"></div>
+                        </div>
+                        <div class="progress-text" id="mcProgressText">0%</div>
+                    </div>
+                    <div id="mcResults"></div>
+                </div>
+
+                <!-- JAR Tab -->
+                <div id="jar" class="tab-content">
+                    <div class="card">
+                        <div class="card-title">JAR File Inspector</div>
+                        <input type="file" id="jarFile2" accept=".jar" style="width: 100%; padding: 12px;">
+                        <button class="btn btn-primary" onclick="inspectJar()" style="margin-top: 12px; width: 100%;">
+                            Inspect JAR
+                        </button>
+                    </div>
+                    <div id="jarResults"></div>
+                </div>
+
+                <!-- Browser Tab -->
+                <div id="browser" class="tab-content">
+                    <div class="card">
+                        <div class="card-title">Browser History Scan</div>
+                        <div class="card-description">Scan Chrome/Edge history for suspicious sites</div>
+                        <button class="btn btn-primary" onclick="scanBrowserHistory()" style="margin-top: 16px;">
+                            <span class="spinner" id="browserSpinner" style="display:none;">⟳</span>
+                            Scan History
+                        </button>
+                    </div>
+                    <div id="browserResults"></div>
+                </div>
+
+                <!-- Processes Tab -->
+                <div id="processes" class="tab-content">
+                    <div class="card">
+                        <div class="card-title">Process Scanner</div>
+                        <div class="card-description">Detect malicious processes running</div>
+                        <button class="btn btn-primary" onclick="scanProcesses()" style="margin-top: 16px;">
+                            <span class="spinner" id="processSpinner" style="display:none;">⟳</span>
+                            Scan Processes
+                        </button>
+                    </div>
+                    <div id="processResults"></div>
+                </div>
+
+                <!-- Full Scan Tab -->
+                <div id="fullscan" class="tab-content">
+                    <div class="card">
+                        <div class="card-title">Full Automatic Scan</div>
+                        <div class="card-description">Complete system scan - Minecraft + Browser + Processes</div>
+                        <button class="btn btn-primary" onclick="startFullAutoScan()" style="margin-top: 16px; width: 100%;">
+                            <span class="spinner" id="fullSpinner" style="display:none;">⟳</span>
+                            Start Full Scan
+                        </button>
+                    </div>
+                    <div class="progress-container" id="fullProgress" style="display:none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="fullProgressFill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="fullProgressText">0%</span> - <span id="fullCurrentTask">Initializing...</span>
+                        </div>
+                    </div>
+                    <div id="fullResults"></div>
+                </div>
+
+                <!-- Ghost Detection Tab -->
+                <div id="ghost" class="tab-content">
+                    <div class="card">
+                        <div class="card-title">Ghost Client Detection</div>
+                        <div class="card-description">Detect Argon, Wurst+, and instant-speed clients</div>
+                        <input type="file" id="ghostFile" accept=".jar" style="width: 100%; padding: 12px;">
+                        <button class="btn btn-primary" onclick="detectGhost()" style="margin-top: 12px; width: 100%;">
+                            <span class="spinner" id="ghostSpinner" style="display:none;">⟳</span>
+                            Detect Ghost Clients
+                        </button>
+                    </div>
+                    <div id="ghostResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected tab
+            const tab = document.getElementById(tabName);
+            if (tab) {
+                tab.classList.add('active');
+            }
+
+            // Mark nav item as active
+            event.target.closest('.nav-item').classList.add('active');
+
+            // Update title
+            const titles = {
+                'home': 'Quick Scan',
+                'minecraft': 'Minecraft Scanner',
+                'jar': 'JAR Inspector',
+                'browser': 'Browser History',
+                'processes': 'Process Scanner',
+                'fullscan': 'Full Auto Scan',
+                'ghost': 'Ghost Detection'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabName] || 'Scanner';
+        }
+
+        async function quickMinecraftScan() {
+            const spinner = document.getElementById('mcSpinner') || document.getElementById('mcSpinner2');
+            spinner.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/api/scan/minecraft-ultra-fast');
+                const data = await response.json();
+                displayResults('mcResults', data, 'Minecraft Scan Complete');
+            } catch (e) {
+                displayError('mcResults', e.message);
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function inspectJar() {
+            const file = document.getElementById('jarFile') || document.getElementById('jarFile2');
+            if (!file.files[0]) {
+                alert('Please select a JAR file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file.files[0]);
+
+            try {
+                const response = await fetch('/api/jar/contents', { method: 'POST', body: formData });
+                const data = await response.json();
+                displayResults('jarResults', data, 'JAR Contents');
+            } catch (e) {
+                displayError('jarResults', e.message);
+            }
+        }
+
+        async function scanBrowserHistory() {
+            const spinner = document.getElementById('browserSpinner');
+            spinner.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/api/scan/browser');
+                const data = await response.json();
+                displayResults('browserResults', data, 'Browser Scan Complete');
+            } catch (e) {
+                displayError('browserResults', e.message);
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function scanProcesses() {
+            const spinner = document.getElementById('processSpinner');
+            spinner.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/api/scan/processes');
+                const data = await response.json();
+                displayResults('processResults', data, 'Process Scan Complete');
+            } catch (e) {
+                displayError('processResults', e.message);
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function startFullAutoScan() {
+            const spinner = document.getElementById('fullSpinner');
+            const progress = document.getElementById('fullProgress');
+            const progressFill = document.getElementById('fullProgressFill');
+            const progressText = document.getElementById('fullProgressText');
+            const currentTask = document.getElementById('fullCurrentTask');
+
+            spinner.style.display = 'inline-block';
+            progress.style.display = 'block';
+            progressFill.style.width = '0%';
+
+            try {
+                const response = await fetch('/api/scan/full-ultra-fast');
+                const data = await response.json();
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+                currentTask.textContent = 'Complete!';
+                displayResults('fullResults', data, 'Full Scan Complete');
+            } catch (e) {
+                displayError('fullResults', e.message);
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function detectGhost() {
+            const file = document.getElementById('ghostFile');
+            if (!file.files[0]) {
+                alert('Please select a JAR file');
+                return;
+            }
+
+            const spinner = document.getElementById('ghostSpinner');
+            spinner.style.display = 'inline-block';
+
+            const formData = new FormData();
+            formData.append('file', file.files[0]);
+
+            try {
+                const response = await fetch('/api/scan/ghost-client', { method: 'POST', body: formData });
+                const data = await response.json();
+                displayResults('ghostResults', data, 'Ghost Client Detection');
+            } catch (e) {
+                displayError('ghostResults', e.message);
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+
+        function displayResults(elementId, data, title) {
+            const element = document.getElementById(elementId);
+            let html = `<div class="card"><div class="card-title">${title}</div>`;
+
+            if (data.is_cheat || data.detections) {
+                html += `<div class="detection-result critical">
+                    <span class="detection-badge critical">DETECTED</span>
+                    <strong>${data.risk_level || 'Cheat Detected'}</strong>
+                    <p style="margin-top: 8px; font-size: 12px;">${data.detections ? data.detections.length : 0} detections</p>
+                </div>`;
+            } else {
+                html += `<div class="detection-result clean">
+                    <span class="detection-badge clean">CLEAN</span>
+                    <strong>No threats detected</strong>
+                </div>`;
+            }
+
+            html += '</div>';
+            element.innerHTML = html;
+        }
+
+        function displayError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="card">
+                <div class="detection-result" style="border-color: #ff9800; background: rgba(255, 152, 0, 0.1);">
+                    <strong>Error: ${message}</strong>
+                </div>
+            </div>`;
+        }
+    </script>
+</body>
+</html>
