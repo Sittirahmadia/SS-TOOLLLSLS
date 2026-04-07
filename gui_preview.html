@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SS Tools Scanner v3.0 - GUI Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            height: 100vh;
+        }
+
+        /* ═══ HEADER ═══ */
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(90deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-bottom: 2px solid #ff5252;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ff5252;
+            letter-spacing: 1px;
+        }
+
+        .status {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        /* ═══ SIDEBAR ═══ */
+        .sidebar {
+            background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+            border-right: 1px solid rgba(255, 82, 82, 0.2);
+            padding: 16px 0;
+            overflow-y: auto;
+            grid-row: 2;
+        }
+
+        .tab-button {
+            width: 100%;
+            padding: 14px 12px;
+            border: none;
+            background: transparent;
+            color: #a0a0a0;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: left;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            margin: 4px 0;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 82, 82, 0.1);
+            color: #ff5252;
+        }
+
+        .tab-button.active {
+            background: rgba(255, 82, 82, 0.15);
+            color: #ff5252;
+            border-left-color: #ff5252;
+        }
+
+        /* ═══ MAIN CONTENT ═══ */
+        .main {
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+
+        .tab-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══ BUTTONS ═══ */
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .button-group.full {
+            grid-template-columns: 1fr;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #ff5252 0%, #ff1744 100%);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            box-shadow: 0 6px 20px rgba(255, 82, 82, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* ═══ CARDS ═══ */
+        .info-card {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 82, 82, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            border-color: rgba(255, 82, 82, 0.5);
+            box-shadow: 0 4px 12px rgba(255, 82, 82, 0.1);
+        }
+
+        .info-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ff5252;
+            margin-bottom: 8px;
+        }
+
+        .info-card-desc {
+            font-size: 13px;
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 12px;
+        }
+
+        .feature-list li {
+            padding: 6px 0;
+            font-size: 13px;
+            color: #b0b0b0;
+            border-left: 2px solid #ff5252;
+            padding-left: 10px;
+        }
+
+        /* ═══ OUTPUT ═══ */
+        .output-box {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 82, 82, 0.2);
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #00ff00;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        /* ═══ SCROLLBAR ═══ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ff5252;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff1744;
+        }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ff5252;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-title">🔍 SS Tools Scanner v3.0</div>
+            <div class="status">✓ Ready - 6 Tabs • 12 Scanners • All Integrated</div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <button class="tab-button active" onclick="switchTab('quick')">⚡ Quick Scan</button>
+            <button class="tab-button" onclick="switchTab('jar')">📦 JAR Analysis</button>
+            <button class="tab-button" onclick="switchTab('minecraft')">🎮 Minecraft</button>
+            <button class="tab-button" onclick="switchTab('system')">⚙️ System Scan</button>
+            <button class="tab-button" onclick="switchTab('browser')">🌐 Browser</button>
+            <button class="tab-button" onclick="switchTab('advanced')">🔧 Advanced</button>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+            <!-- Tab 1: Quick Scan -->
+            <div id="quick" class="tab-content active">
+                <h2 style="color: #ff5252; margin-bottom: 16px;">⚡ Quick Scan - Complete System</h2>
+                <div class="button-group full">
+                    <button class="btn" onclick="alert('🔄 Complete system scan running...')">⚡ SCAN ALL (Complete System)</button>
+                    <button class="btn" onclick="alert('📦 Quick JAR scan...')">📦 Scan JAR</button>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-title">What This Does</div>
+                    <div class="info-card-desc">
+                        Runs a complete system scan combining:
+                        <ul class="feature-list">
+                            <li>JAR file analysis with ghost client detection</li>
+                            <li>Minecraft launcher auto-detection</li>
+                            <li>Browser history analysis</li>
+                            <li>Running process detection</li>
+                            <li>Deleted files recovery</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="output-box">
+                    🚀 Click a button to start scanning
+                </div>
+            </div>
+
+            <!-- Tab 2: JAR Analysis -->
+            <div id="jar" class="tab-content">
+                <h2 style="color: #ff5252; margin-bottom: 16px;">📦 JAR File Analysis</h2>
+                <div class="button-group">
+                    <button class="btn" onclick="alert('📂 File browser...')">📂 Select JAR File</button>
+                    <button class="btn" onclick="alert('🔍 JAR scanning...')">🔍 Scan JAR</button>
+                </div>
+                <div class="grid-2">
+                    <div class="info-card">
+                        <div class="info-card-title">👻 Ghost Client Detection</div>
+                        <div class="info-card-desc">
+                            Detects hidden/stealth clients:
+                            <ul class="feature-list">
+                                <li>Argon Client</li>
+                                <li>Wurst+ (Extended)</li>
+                                <li>Instant-Speed Clients</li>
+                                <li>Hypixel Bypassers</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">⚡ Cheat Detection</div>
+                        <div class="info-card-desc">
+                            50+ cheat signatures:
+                            <ul class="feature-list">
+                                <li>Combat hacks</li>
+                                <li>Movement mods</li>
+                                <li>Vision exploits</li>
+                                <li>Builder tools</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="output-box">
+                    Select a JAR file to analyze
+                </div>
+            </div>
+
+            <!-- Tab 3: Minecraft -->
+            <div id="minecraft" class="tab-content">
+                <h2 style="color: #ff5252; margin-bottom: 16px;">🎮 Minecraft Launcher Scan</h2>
+                <div class="button-group full">
+                    <button class="btn" onclick="alert('🎮 Scanning Minecraft installations...')">🎮 Scan All Minecraft Installations</button>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-title">Auto-Detection</div>
+                    <div class="info-card-desc">
+                        Automatically detects and scans:
+                        <ul class="feature-list">
+                            <li>.minecraft folder</li>
+                            <li>MultiMC instances</li>
+                            <li>Prism Launcher</li>
+                            <li>PolyMC installations</li>
+                            <li>Custom launchers</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-title">⚡ Performance</div>
+                    <div class="info-card-desc">
+                        Parallel scanning with 8 workers • 100+ mods in <5 seconds • Ghost client detection integrated
+                    </div>
+                </div>
+                <div class="output-box">
+                    Click to scan all Minecraft installations
+                </div>
+            </div>
+
+            <!-- Tab 4: System Scan -->
+            <div id="system" class="tab-content">
+                <h2 style="color: #ff5252; margin-bottom: 16px;">⚙️ Full System Scan</h2>
+                <div class="button-group full">
+                    <button class="btn" onclick="alert('⚙️ Full system scan running...')">⚙️ Full System Scan</button>
+                </div>
+                <div class="section-title">Scanning Components</div>
+                <div class="grid-2">
+                    <div class="info-card">
+                        <div class="info-card-title">🌐 Browser History</div>
+                        <div class="info-card-desc">
+                            • Chrome/Edge detection<br>
+
+                            • Suspicious URLs<br>
+                            • Privacy-respecting
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">⚙️ Processes</div>
+                        <div class="info-card-desc">
+                            • Real-time detection<br>
+                            • Malicious executables<br>
+                            • Zero false flags<br>
+                            • PID reporting
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">🗑️ Deleted Files</div>
+                        <div class="info-card-desc">
+                            • File recovery<br>
+                            • Signature matching<br>
+                            • System scan<br>
+                            • Statistics
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">📊 Risk Report</div>
+                        <div class="info-card-desc">
+                            • Combined threats<br>
+                            • Risk assessment<br>
+                            • Detailed summary<br>
+                            • Recovery options
+                        </div>
+                    </div>
+                </div>
+                <div class="output-box">
+                    Click to run complete system analysis
+                </div>
+            </div>
+
+            <!-- Tab 5: Browser -->
+            <div id="browser" class="tab-content">
+                <h2 style="color: #ff5252; margin-bottom: 16px;">🌐 Browser History Analysis</h2>
+                <div class="button-group full">
+                    <button class="btn" onclick="alert('🌐 Scanning browser history...')">🌐 Scan Browser History</button>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-title">🔍 What We Detect (80+ Sites)</div>
+                    <div class="info-card-desc">
+                        <strong>Content Filtering:</strong> Advanced pattern matching<br>
+                        <strong>Suspicious Detection:</strong> Hacks, cheats, cracks, bypasses<br>
+                        <strong>Site Analysis:</strong> Comprehensive URL classification<br>
+                        <strong>Privacy-Respecting:</strong> Local processing only
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="info-card">
+                        <div class="info-card-title">⚡ Performance</div>
+                        <div class="info-card-desc">500 URLs scanned in <3 seconds</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">🔐 Privacy</div>
+                        <div class="info-card-desc">Local scanning only, no uploads</div>
+                    </div>
+                </div>
+                <div class="output-box">
+                    Click to analyze browser history
+                </div>
+            </div>
+
+            <!-- Tab 6: Advanced -->
+            <div id="advanced" class="tab-content">
+                <h2 style="color: #ff5252; margin-bottom: 16px;">🔧 Advanced Tools</h2>
+                <div class="button-group">
+                    <button class="btn" onclick="alert('⚙️ Scanning processes...')">⚙️ Scan Processes</button>
+                    <button class="btn" onclick="alert('🗑️ Scanning deleted files...')">🗑️ Scan Deleted Files</button>
+                </div>
+                <div class="section-title">Process Scanner</div>
+                <div class="info-card">
+                    <div class="info-card-desc">
+                        <strong>Detects:</strong> Cheat Engine, AutoHotkey, OllyDbg, x64dbg, Ghidra, IDA64, Frida<br>
+                        <strong>Features:</strong> Real-time detection, whitelist of 50+ legitimate processes<br>
+                        <strong>Speed:</strong> Complete scan in <1 second
+                    </div>
+                </div>
+                <div class="section-title">Deleted Files Scanner</div>
+                <div class="info-card">
+                    <div class="info-card-desc">
+                        <strong>Scans:</strong> Temp dir, User dir, Windows dir<br>
+                        <strong>Detects:</strong> Hidden files, zero-size files, recent modifications<br>
+                        <strong>Recovers:</strong> PDF, DOCX, XLSX, EXE, DLL, Images, Videos
+                    </div>
+                </div>
+                <div class="output-box">
+                    Click buttons above to run specific scans
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
