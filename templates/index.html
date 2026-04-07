@@ -622,64 +622,42 @@
         </div>
     </div>
 
-    <!-- ═══ MINECRAFT SCANNER (Mod + JAR + Class Inspector) ═══ -->
+    <!-- ═══ MINECRAFT FULL SCANNER ═══ -->
     <div class="panel" id="panel-mods">
-        <!-- Sub-tabs within Minecraft Scanner -->
-        <div class="nav-tabs" id="mcSubTabs" style="margin-bottom:20px;background:var(--bg-card);">
-            <button class="nav-tab active" data-mctab="batch"><span class="tab-icon">📦</span> Batch Mod Scan</button>
-            <button class="nav-tab" data-mctab="jar"><span class="tab-icon">🔬</span> JAR Deep Inspector</button>
-            <button class="nav-tab" data-mctab="class"><span class="tab-icon">📄</span> Class File Viewer</button>
+        <!-- Auto Scan All Launchers -->
+        <div class="card" style="border:1px solid var(--accent);background:linear-gradient(135deg, rgba(108,92,231,0.05), rgba(108,92,231,0.02));">
+            <div class="card-title"><span class="icon">🚀</span> Auto-Scan All Minecraft Launchers</div>
+            <p style="color:var(--text-secondary);margin-bottom:16px;font-size:13px">
+                Automatically detects <strong>ALL</strong> Minecraft launchers on this PC, then deep-inspects every mod JAR, extracts .class strings, checks logs for cheat traces, and verifies mod authenticity. One click — full report.
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                <span class="badge badge-info">Auto Launcher Detection</span>
+                <span class="badge badge-info">JAR Deep Inspect</span>
+                <span class="badge badge-info">Class Extraction</span>
+                <span class="badge badge-info">Log Scanning</span>
+                <span class="badge badge-info">Authenticity Check</span>
+                <span class="badge badge-info">Disguised Mod Detection</span>
+            </div>
+            <button class="btn btn-primary btn-lg" id="btnMcAutoScan" onclick="runMcAutoScan()">🚀 Auto-Scan All Launchers</button>
         </div>
 
-        <!-- ── Batch Mod Scan ── -->
-        <div class="mc-panel active" id="mc-batch">
-            <div class="card">
-                <div class="card-title"><span class="icon">📦</span> Upload Mods (.jar / .zip)</div>
-                <p style="color:var(--text-secondary);margin-bottom:12px;font-size:13px">Upload multiple mod files for batch cheat scanning. Every JAR is deep-inspected — class files extracted, strings scanned, authenticity verified for whitelisted mods.</p>
-                <div class="upload-zone" id="modUploadZone" onclick="document.getElementById('modFileInput').click()">
-                    <div class="upload-icon">📦</div>
-                    <h3>Drop mod files here or click to browse</h3>
-                    <p>Supports .jar and .zip files — scans for cheat patterns, class files, and strings</p>
-                    <div class="limit">Max upload: 10,000 MB (10 GB) per batch</div>
-                </div>
-                <input type="file" id="modFileInput" multiple accept=".jar,.zip" style="display:none" onchange="uploadMods(this.files)">
+        <!-- OR separator -->
+        <div style="text-align:center;padding:16px 0;color:var(--text-muted);font-size:13px;font-weight:600;">── OR upload mods manually ──</div>
+
+        <!-- Upload mods manually -->
+        <div class="card">
+            <div class="card-title"><span class="icon">📦</span> Upload Mods for Full Scan</div>
+            <div class="upload-zone" id="mcFullUploadZone" onclick="document.getElementById('mcFullFileInput').click()">
+                <div class="upload-icon">📦</div>
+                <h3>Drop mod files here — Full Minecraft Scan</h3>
+                <p>Supports .jar, .zip, .class — Every file is deep inspected, every .class extracted and scanned</p>
+                <div class="limit">Max upload: 10,000 MB (10 GB) per batch</div>
             </div>
-            <div id="modResults"></div>
+            <input type="file" id="mcFullFileInput" multiple accept=".jar,.zip,.class" style="display:none" onchange="runMinecraftUploadScan(this.files)">
         </div>
 
-        <!-- ── JAR Deep Inspector ── -->
-        <div class="mc-panel" id="mc-jar">
-            <div class="card">
-                <div class="card-title"><span class="icon">🔬</span> Deep JAR Inspector + Class Inspector</div>
-                <p style="color:var(--text-secondary);margin-bottom:12px;font-size:13px">
-                    Upload a single .jar file for deep inspection. Reads <strong>every</strong> .class file inside, extracts all string constants from the Java bytecode constant pool, checks package structure for mod authenticity, and runs cheat signature matching on everything.
-                </p>
-                <div class="upload-zone" id="jarUploadZone" onclick="document.getElementById('jarFileInput').click()">
-                    <div class="upload-icon">🔬</div>
-                    <h3>Drop a JAR file here</h3>
-                    <p>Full .class string extraction + authenticity verification + cheat detection</p>
-                </div>
-                <input type="file" id="jarFileInput" accept=".jar,.zip" style="display:none" onchange="inspectJar(this.files[0])">
-            </div>
-            <div id="jarResults"></div>
-        </div>
-
-        <!-- ── Class File Viewer ── -->
-        <div class="mc-panel" id="mc-class">
-            <div class="card">
-                <div class="card-title"><span class="icon">📄</span> Class File String Viewer</div>
-                <p style="color:var(--text-secondary);margin-bottom:12px;font-size:13px">
-                    Upload a single <code>.class</code> file or a <code>.jar</code> to extract and display all string constants from Java bytecode. Useful for manual inspection of suspicious class files.
-                </p>
-                <div class="upload-zone" id="classUploadZone" onclick="document.getElementById('classFileInput').click()">
-                    <div class="upload-icon">📄</div>
-                    <h3>Drop a .class or .jar file here</h3>
-                    <p>Extracts all UTF-8 string constants from Java class constant pool</p>
-                </div>
-                <input type="file" id="classFileInput" accept=".class,.jar,.zip" style="display:none" onchange="inspectClassFile(this.files[0])">
-            </div>
-            <div id="classResults"></div>
-        </div>
+        <!-- Results -->
+        <div id="mcFullResults"></div>
     </div>
 
     <!-- ═══ DELETED FILES ═══ -->
@@ -813,7 +791,7 @@ function showToast(msg, type = 'info') {
 }
 
 // ── Drag & Drop ──
-['modUploadZone', 'jarUploadZone', 'classUploadZone'].forEach(id => {
+['mcFullUploadZone'].forEach(id => {
     const zone = document.getElementById(id);
     if (!zone) return;
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
@@ -821,9 +799,7 @@ function showToast(msg, type = 'info') {
     zone.addEventListener('drop', e => {
         e.preventDefault();
         zone.classList.remove('dragover');
-        if (id === 'modUploadZone') uploadMods(e.dataTransfer.files);
-        else if (id === 'classUploadZone' && e.dataTransfer.files.length) inspectClassFile(e.dataTransfer.files[0]);
-        else if (e.dataTransfer.files.length) inspectJar(e.dataTransfer.files[0]);
+        runMinecraftUploadScan(e.dataTransfer.files);
     });
 });
 
@@ -920,23 +896,208 @@ function renderModResults(data, container) {
     container.innerHTML = html;
 }
 
-// ── Upload Mods ──
-async function uploadMods(files) {
+// ── Minecraft Upload Full Scan ──
+async function runMinecraftUploadScan(files) {
     if (!files || files.length === 0) return;
-    const container = document.getElementById('modResults');
-    container.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><div class="spinner"></div><p style="margin-top:12px;color:var(--text-secondary);">Scanning mods...</p></div>';
-    showToast(`Uploading ${files.length} file(s)...`, 'info');
+    const container = document.getElementById('mcFullResults');
+    container.innerHTML = '<div class="card" style="text-align:center;padding:48px;"><div class="spinner"></div><p style="margin-top:16px;color:var(--text-secondary);font-size:14px">Deep scanning ' + files.length + ' file(s)...<br><span style="font-size:12px">Extracting .class files, reading bytecode strings, verifying authenticity...</span></p></div>';
+    showToast(`Uploading ${files.length} file(s) for full scan...`, 'info');
 
     const fd = new FormData();
     for (const f of files) fd.append('files', f);
 
     try {
-        const data = await api('/api/upload-mods', { method: 'POST', body: fd });
-        renderModResults(data, container);
-        showToast(`Scan complete: ${data.flagged} flagged, ${data.safe} clean`, data.flagged > 0 ? 'error' : 'success');
+        const data = await api('/api/minecraft-full-scan', { method: 'POST', body: fd });
+        renderMcFullResults(data, container);
+        showToast(`Scan complete: ${data.total_flagged} flagged, ${data.total_clean} clean`, data.total_flagged > 0 ? 'error' : 'success');
     } catch (e) {
         container.innerHTML = `<div class="card" style="color:var(--danger)">Error: ${e.message}</div>`;
     }
+}
+
+// ── Minecraft Auto-Scan All Launchers ──
+async function runMcAutoScan() {
+    const btn = document.getElementById('btnMcAutoScan');
+    const container = document.getElementById('mcFullResults');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Detecting launchers & scanning...';
+    container.innerHTML = '<div class="card" style="text-align:center;padding:48px;"><div class="spinner"></div><p style="margin-top:16px;color:var(--text-secondary);font-size:14px">Auto-detecting all Minecraft launchers...<br><span style="font-size:12px">Scanning mods, extracting classes, checking logs, verifying authenticity...</span></p></div>';
+
+    try {
+        const data = await api('/api/scan/minecraft-auto');
+        renderMcAutoResults(data, container);
+        const flags = data.summary?.total_flags || 0;
+        showToast(flags > 0 ? `${flags} flag(s) detected!` : 'All launchers clean!', flags > 0 ? 'error' : 'success');
+    } catch (e) {
+        container.innerHTML = `<div class="card" style="color:var(--danger)">Error: ${e.message}</div>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🚀 Auto-Scan All Launchers';
+    }
+}
+
+// ── Render Minecraft Upload Scan Results ──
+function renderMcFullResults(data, container) {
+    let html = '';
+
+    // Stats
+    html += `<div class="grid-4" style="margin-bottom:20px;">
+        <div class="stat-card"><div class="stat-value">${data.total_files}</div><div class="stat-label">Files Scanned</div></div>
+        <div class="stat-card danger"><div class="stat-value">${data.total_flagged}</div><div class="stat-label">Flagged</div></div>
+        <div class="stat-card"><div class="stat-value">${data.total_disguised || 0}</div><div class="stat-label">Disguised</div></div>
+        <div class="stat-card success"><div class="stat-value">${data.total_whitelisted || 0}</div><div class="stat-label">Verified Clean</div></div>
+    </div>`;
+
+    // Extra stats
+    html += `<div class="grid-3" style="margin-bottom:20px;">
+        <div class="stat-card"><div class="stat-value">${data.total_classes_scanned || 0}</div><div class="stat-label">Classes Scanned</div></div>
+        <div class="stat-card"><div class="stat-value">${data.total_strings_extracted || 0}</div><div class="stat-label">Strings Extracted</div></div>
+        <div class="stat-card ${data.total_flagged > 0 ? 'danger' : 'success'}"><div class="stat-value">${data.verdict}</div><div class="stat-label">Verdict</div></div>
+    </div>`;
+
+    // Verdict banner
+    if (data.verdict === 'FLAGGED') {
+        html += `<div class="verdict-banner flagged"><h2>🚨 ${data.total_flagged} CHEAT(S) DETECTED</h2><p>${data.total_disguised > 0 ? data.total_disguised + ' disguised mod(s) found!' : 'Suspicious mods found — see details below'}</p></div>`;
+    } else {
+        html += `<div class="verdict-banner clean"><h2>✅ ALL CLEAN</h2><p>No cheats detected in ${data.total_files} file(s) — ${data.total_classes_scanned} classes inspected</p></div>`;
+    }
+
+    // JAR results (flagged first)
+    const allResults = [...(data.jar_results || []), ...(data.class_results || [])];
+    const sorted = allResults.sort((a, b) => (b.flagged ? 1 : 0) - (a.flagged ? 1 : 0));
+
+    for (const r of sorted) {
+        const flagged = r.flagged;
+        const disguised = r.is_disguised;
+        const wl = r.whitelisted;
+        const detections = r.detections || [];
+
+        html += `<div class="result-item ${flagged ? 'flagged' : 'safe'}">
+            <div class="result-header">
+                <h4>${disguised ? '🎭' : flagged ? '🚨' : '✅'} ${r.filename || 'Unknown'}</h4>
+                <div>${disguised ? '<span class="badge badge-critical">DISGUISED</span>' : flagged ? severityBadge(r.max_severity || 'high') : '<span class="badge badge-clean">Clean</span>'}${wl ? ' <span class="badge badge-info">Verified</span>' : ''}</div>
+            </div>
+            ${disguised ? `<div style="color:var(--danger);font-size:12px;margin-bottom:8px;font-weight:600">⚠️ Pretends to be "${r.authenticity?.claimed_mod}" but has wrong package structure!</div>` : ''}
+            <div class="result-meta">
+                ${r.size_mb !== undefined ? `<span>📏 ${r.size_mb} MB</span>` : ''}
+                ${r.class_count !== undefined ? `<span>📄 ${r.class_count} classes</span>` : ''}
+                ${r.scanned_classes !== undefined ? `<span>🔍 ${r.scanned_classes} scanned</span>` : ''}
+                ${r.strings_count !== undefined ? `<span>🔤 ${r.strings_count} strings</span>` : ''}
+            </div>`;
+
+        if (detections.length > 0) {
+            html += '<div class="detection-list">';
+            for (const d of detections) {
+                html += `<div class="detection-entry">${severityBadge(d.severity)}<div><strong>${d.name}</strong> — ${d.category}<br>
+                <span style="color:var(--text-secondary);font-size:12px">${d.description || ''}</span>
+                ${d.matched_patterns ? `<div class="patterns">Matched: ${d.matched_patterns.join(', ')}</div>` : ''}</div></div>`;
+            }
+            html += '</div>';
+        }
+
+        // Show class files for JARs
+        if (r.class_files && r.class_files.length > 0 && r.class_files.length <= 50) {
+            html += `<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:var(--text-secondary)">📄 View ${r.class_files.length} class files</summary>
+            <div class="class-list" style="margin-top:6px;max-height:200px">`;
+            for (const c of r.class_files) {
+                html += `<div class="class-entry">${c}</div>`;
+            }
+            html += '</div></details>';
+        }
+
+        html += '</div>';
+    }
+
+    container.innerHTML = html;
+}
+
+// ── Render Minecraft Auto-Scan Results ──
+function renderMcAutoResults(data, container) {
+    let html = '';
+    const sum = data.summary || {};
+    const launchers = data.launchers || {};
+    const modScan = data.mod_scan || {};
+    const logScan = data.log_scan || {};
+
+    // Verdict
+    if (sum.verdict === 'CLEAN') {
+        html += `<div class="verdict-banner clean"><h2>✅ ALL LAUNCHERS CLEAN</h2><p>Scanned ${launchers.launchers_found || 0} launcher(s), ${modScan.total_scanned || 0} mod(s), checked logs — no cheats found</p></div>`;
+    } else {
+        html += `<div class="verdict-banner flagged"><h2>🚨 ${sum.total_flags} FLAG(S) DETECTED</h2><p>Suspicious activity found across ${launchers.launchers_found || 0} launcher(s)</p></div>`;
+    }
+
+    // Stats
+    html += `<div class="grid-4" style="margin-bottom:20px;">
+        <div class="stat-card"><div class="stat-value">${launchers.launchers_found || 0}</div><div class="stat-label">Launchers Found</div></div>
+        <div class="stat-card"><div class="stat-value">${modScan.total_scanned || 0}</div><div class="stat-label">Mods Scanned</div></div>
+        <div class="stat-card ${modScan.total_flagged > 0 ? 'danger' : 'success'}"><div class="stat-value">${modScan.total_flagged || 0}</div><div class="stat-label">Mods Flagged</div></div>
+        <div class="stat-card ${logScan.total_findings > 0 ? 'danger' : 'success'}"><div class="stat-value">${logScan.total_findings || 0}</div><div class="stat-label">Log Findings</div></div>
+    </div>`;
+
+    html += `<div class="grid-3" style="margin-bottom:20px;">
+        <div class="stat-card"><div class="stat-value">${modScan.total_disguised || 0}</div><div class="stat-label">Disguised Mods</div></div>
+        <div class="stat-card"><div class="stat-value">${modScan.total_whitelisted || 0}</div><div class="stat-label">Verified Clean</div></div>
+        <div class="stat-card success"><div class="stat-value">${modScan.total_clean || 0}</div><div class="stat-label">Clean Mods</div></div>
+    </div>`;
+
+    // Launchers found
+    html += '<div class="card"><div class="card-title"><span class="icon">🎮</span> Detected Launchers</div>';
+    for (const l of (launchers.launchers || [])) {
+        const modCount = l.mods?.length || 0;
+        const logCount = l.log_findings?.length || 0;
+        const hasIssues = logCount > 0;
+        html += `<div class="result-item ${hasIssues ? 'flagged' : 'safe'}"><div class="result-header"><h4>${hasIssues ? '⚠️' : '🎮'} ${l.name}</h4>
+        <div><span class="badge badge-info">${modCount} mods</span>${l.has_logs ? ' <span class="badge badge-info">Logs</span>' : ''}${logCount > 0 ? ` <span class="badge badge-high">${logCount} log flags</span>` : ''}</div></div>
+        <div class="result-meta"><span>📁 ${l.path}</span>${l.instances?.length > 0 ? `<span>📦 ${l.instances.length} instances</span>` : ''}</div></div>`;
+    }
+    html += '</div>';
+
+    // Flagged mods
+    if (modScan.flagged_results?.length > 0) {
+        html += '<div class="card"><div class="card-title"><span class="icon">🚨</span> Flagged Mods</div>';
+        for (const r of modScan.flagged_results) {
+            const disguised = r.is_disguised;
+            html += `<div class="result-item flagged"><div class="result-header"><h4>${disguised ? '🎭' : '🚨'} ${r.filename}</h4>
+            <div>${disguised ? '<span class="badge badge-critical">DISGUISED</span>' : severityBadge(r.max_severity || 'high')}${r.launcher ? ` <span class="badge badge-info">${r.launcher}</span>` : ''}</div></div>
+            ${disguised ? `<div style="color:var(--danger);font-size:12px;margin-bottom:4px;font-weight:600">Pretends to be "${r.authenticity?.claimed_mod}"</div>` : ''}
+            <div class="result-meta"><span>📏 ${r.size_mb} MB</span><span>📄 ${r.class_count} classes</span></div>`;
+            if (r.detections?.length > 0) {
+                html += '<div class="detection-list">';
+                for (const d of r.detections) {
+                    html += `<div class="detection-entry">${severityBadge(d.severity)}<div><strong>${d.name}</strong> — ${d.category}</div></div>`;
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
+    // Log findings
+    if (logScan.findings?.length > 0) {
+        html += '<div class="card"><div class="card-title"><span class="icon">📋</span> Suspicious Log Entries</div>';
+        html += '<div style="max-height:400px;overflow-y:auto;">';
+        for (const f of logScan.findings) {
+            html += `<div class="result-item flagged"><div class="result-header"><h4>📋 ${f.matched_pattern}</h4>${severityBadge(f.severity)}</div>
+            <div class="result-meta"><span>📄 ${f.log_file}</span><span>Line ${f.line_number}</span>${f.launcher ? `<span>🎮 ${f.launcher}</span>` : ''}</div>
+            <pre style="background:var(--bg-input);padding:8px;border-radius:6px;font-size:11px;margin-top:6px;overflow-x:auto;color:var(--text-muted)">${escapeHtml(f.line)}</pre></div>`;
+        }
+        html += '</div></div>';
+    }
+
+    // All mods table (collapsible)
+    if (modScan.all_results?.length > 0) {
+        html += `<div class="card"><details><summary style="cursor:pointer;font-weight:700;font-size:14px">📦 All Scanned Mods (${modScan.all_results.length})</summary>
+        <div style="max-height:400px;overflow-y:auto;margin-top:12px;"><table class="data-table"><thead><tr><th>Mod</th><th>Launcher</th><th>Size</th><th>Classes</th><th>Status</th></tr></thead><tbody>`;
+        for (const r of modScan.all_results) {
+            const status = r.is_disguised ? '🎭 DISGUISED' : r.flagged ? '🚨 FLAGGED' : r.whitelisted ? '✅ Verified' : '✅ Clean';
+            const cls = r.flagged ? 'color:var(--danger)' : 'color:var(--success)';
+            html += `<tr><td>${r.filename}</td><td>${r.launcher || '-'}</td><td>${r.size_mb} MB</td><td>${r.class_count || 0}</td><td style="${cls};font-weight:600">${status}</td></tr>`;
+        }
+        html += '</tbody></table></div></details></div>';
+    }
+
+    container.innerHTML = html;
 }
 
 // ── Inspect JAR ──

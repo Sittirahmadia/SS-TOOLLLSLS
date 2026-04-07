@@ -373,6 +373,159 @@ def get_recent_logs(logs_dir: str, max_lines: int = 500) -> Optional[str]:
     return None
 
 
+def scan_logs_for_cheats(logs_dir: str) -> List[Dict]:
+    """Scan Minecraft log files for cheat-related entries."""
+    from .cheat_detector import detect_cheats
+
+    findings = []
+    if not os.path.isdir(logs_dir):
+        return findings
+
+    log_files = []
+    # latest.log
+    latest = os.path.join(logs_dir, "latest.log")
+    if os.path.isfile(latest):
+        log_files.append(latest)
+    # Also check compressed logs
+    for f in os.listdir(logs_dir):
+        fpath = os.path.join(logs_dir, f)
+        if f.endswith(".log") and os.path.isfile(fpath) and fpath != latest:
+            log_files.append(fpath)
+
+    # Cheat-specific log patterns (these appear in Minecraft logs when cheats load)
+    CHEAT_LOG_PATTERNS = [
+        # Cheat client initialization
+        "meteor-client", "meteorclient", "MeteorClient",
+        "wurstclient", "WurstClient", "wurst-client",
+        "impactclient", "ImpactClient",
+        "aristois", "Aristois",
+        "liquidbounce", "LiquidBounce",
+        "futureclient", "FutureClient",
+        "rusherhack", "RusherHack",
+        "thunderhack", "ThunderHack",
+        "bleachhack", "BleachHack",
+        "coffeeclient", "CoffeeClient",
+        "phobos", "Phobos",
+        "konas", "Konas",
+        "gamesense", "GameSense",
+        "salhack", "SalHack",
+        "forgehax", "ForgeHax",
+        "3arthh4ck", "earthhack",
+        "inertiaclient", "InertiaClient",
+        "sigmaclient", "SigmaClient",
+        # Module loading indicators
+        "Loading module: KillAura",
+        "Loading module: AutoCrystal",
+        "Loading module: AimAssist",
+        "Loading module: Triggerbot",
+        "Loading module: Scaffold",
+        "Loading module: Speed",
+        "Loading module: Fly",
+        "Loading module: ESP",
+        "Loading module: Xray",
+        "Loading module: Nuker",
+        "Enabled hack:", "Toggled module:",
+        "clickgui", "ClickGUI",
+        # Injection
+        "Injecting into", "injection successful",
+        "agent loaded", "Agent loaded",
+    ]
+
+    for log_path in log_files[:10]:  # Limit to 10 log files
+        try:
+            with open(log_path, "r", errors="replace") as f:
+                content = f.read(5 * 1024 * 1024)  # Max 5MB per log
+
+            log_name = os.path.basename(log_path)
+
+            # Check for cheat patterns
+            for pattern in CHEAT_LOG_PATTERNS:
+                if pattern.lower() in content.lower():
+                    # Find the line containing the match
+                    for i, line in enumerate(content.split("\n")):
+                        if pattern.lower() in line.lower():
+                            findings.append({
+                                "log_file": log_name,
+                                "log_path": log_path,
+                                "line_number": i + 1,
+                                "line": line.strip()[:300],
+                                "matched_pattern": pattern,
+                                "severity": "critical" if any(c in pattern.lower() for c in [
+                                    "meteor", "wurst", "impact", "liquid", "future",
+                                    "rusher", "thunder", "bleach", "phobos", "konas",
+                                    "killaura", "autocrystal", "aimassist", "inject"
+                                ]) else "high",
+                            })
+                            break  # One match per pattern per file is enough
+
+            # Also run the full cheat detector on log content
+            detections = detect_cheats(content, log_name, log_path)
+            for d in detections:
+                findings.append({
+                    "log_file": log_name,
+                    "log_path": log_path,
+                    "line_number": 0,
+                    "line": f"Cheat signature detected: {d.signature_name}",
+                    "matched_pattern": d.signature_name,
+                    "severity": d.severity,
+                })
+
+        except Exception:
+            continue
+
+    # Deduplicate
+    seen = set()
+    unique = []
+    for f in findings:
+        key = (f["log_file"], f["matched_pattern"])
+        if key not in seen:
+            seen.add(key)
+            unique.append(f)
+
+    return unique
+
+
+def scan_custom_folder(folder_path: str) -> Dict:
+    """Scan a user-specified Minecraft folder for mods, logs, versions."""
+    result = {
+        "path": folder_path,
+        "exists": os.path.isdir(folder_path),
+        "mods": [],
+        "versions": [],
+        "log_findings": [],
+        "sub_folders": [],
+    }
+
+    if not result["exists"]:
+        return result
+
+    # Check direct mods folder
+    mods_dir = os.path.join(folder_path, "mods")
+    if os.path.isdir(mods_dir):
+        result["mods"] = get_mod_files(mods_dir)
+
+    # Check versions
+    ver_dir = os.path.join(folder_path, "versions")
+    if os.path.isdir(ver_dir):
+        result["versions"] = get_versions(ver_dir)
+
+    # Check logs
+    logs_dir = os.path.join(folder_path, "logs")
+    if os.path.isdir(logs_dir):
+        result["log_findings"] = scan_logs_for_cheats(logs_dir)
+
+    # List top-level subdirectories
+    try:
+        for item in os.listdir(folder_path):
+            item_path = os.path.join(folder_path, item)
+            if os.path.isdir(item_path):
+                result["sub_folders"].append(item)
+    except Exception:
+        pass
+
+    return result
+
+
 def full_launcher_scan() -> Dict:
     """Perform a full scan of all detected launchers."""
     launchers = detect_launchers()
@@ -392,6 +545,7 @@ def full_launcher_scan() -> Dict:
             "mods": [],
             "versions": [],
             "has_logs": False,
+            "log_findings": [],
         }
 
         for mods_dir in launcher["mods_dirs"]:
@@ -405,6 +559,11 @@ def full_launcher_scan() -> Dict:
             launcher_data["versions"].extend(versions)
 
         launcher_data["has_logs"] = len(launcher["logs_dirs"]) > 0
+        # Scan logs for cheat indicators
+        for logs_dir in launcher["logs_dirs"]:
+            findings = scan_logs_for_cheats(logs_dir)
+            launcher_data["log_findings"].extend(findings)
+
         result["launchers"].append(launcher_data)
 
     return result

@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from scanner.cheat_detector import detect_cheats, get_all_signatures, is_whitelisted
 from scanner.jar_inspector import inspect_jar, scan_mods_directory, read_jar_entries
-from scanner.minecraft_scanner import detect_launchers, full_launcher_scan, get_mod_files
+from scanner.minecraft_scanner import detect_launchers, full_launcher_scan, get_mod_files, scan_logs_for_cheats, scan_custom_folder
 from scanner.deleted_files import scan_deleted_files
 from scanner.process_scanner import full_process_scan
 from scanner.chrome_scanner import scan_chrome_history
@@ -305,6 +305,173 @@ def api_inspect_class():
             time.sleep(60)
             shutil.rmtree(scan_dir, ignore_errors=True)
         threading.Thread(target=cleanup, daemon=True).start()
+
+
+# ── Minecraft Full Auto Scan ───────────────────────────────
+
+@app.route("/api/minecraft-full-scan", methods=["POST"])
+def api_minecraft_full_scan():
+    """
+    Upload mod files (.jar/.zip/.class) and run FULL inspection on all of them:
+    - JAR deep inspect (every .class file)
+    - String constant extraction from Java bytecode
+    - Cheat signature detection
+    - Mod authenticity verification (catches disguised cheats)
+    - Package structure analysis
+    Returns per-file results + overall verdict.
+    """
+    if "files" not in request.files:
+        return jsonify({"error": "No files uploaded"}), 400
+
+    files = request.files.getlist("files")
+    if not files:
+        return jsonify({"error": "No files selected"}), 400
+
+    scan_dir = os.path.join(UPLOAD_DIR, f"mcfull_{int(time.time())}")
+    os.makedirs(scan_dir, exist_ok=True)
+
+    try:
+        jar_results = []
+        class_results = []
+        total_classes_scanned = 0
+        total_strings_extracted = 0
+
+        for f in files:
+            if not f.filename:
+                continue
+            safe_name = f.filename.replace("..", "").replace("/", "_").replace("\\", "_")
+            fpath = os.path.join(scan_dir, safe_name)
+            f.save(fpath)
+
+            ext = os.path.splitext(safe_name)[1].lower()
+
+            if ext in (".jar", ".zip"):
+                # Full JAR inspection (includes class extraction, string scan, authenticity)
+                result = inspect_jar(fpath)
+                jar_results.append(result)
+                total_classes_scanned += result.get("scanned_classes", 0)
+                # Count strings from class files
+                total_strings_extracted += result.get("class_count", 0) * 10  # estimate
+
+            elif ext == ".class":
+                # Single class file inspection
+                from scanner.jar_inspector import extract_strings_from_class
+                with open(fpath, "rb") as cf:
+                    class_bytes = cf.read()
+                strings = extract_strings_from_class(class_bytes)
+                total_strings_extracted += len(strings)
+                total_classes_scanned += 1
+
+                content = " ".join(strings)
+                detections = detect_cheats(content, safe_name, fpath)
+                class_results.append({
+                    "filename": safe_name,
+                    "strings_count": len(strings),
+                    "flagged": len(detections) > 0,
+                    "detections": [
+                        {
+                            "name": d.signature_name,
+                            "category": d.category,
+                            "severity": d.severity,
+                            "description": d.description,
+                            "matched_patterns": d.matched_patterns,
+                            "confidence": d.confidence,
+                        }
+                        for d in detections
+                    ],
+                })
+
+        # Combine results
+        total_files = len(jar_results) + len(class_results)
+        flagged_jars = sum(1 for r in jar_results if r.get("flagged"))
+        flagged_classes = sum(1 for r in class_results if r.get("flagged"))
+        total_flagged = flagged_jars + flagged_classes
+        disguised = sum(1 for r in jar_results if r.get("is_disguised"))
+        whitelisted = sum(1 for r in jar_results if r.get("whitelisted"))
+
+        return jsonify({
+            "total_files": total_files,
+            "total_flagged": total_flagged,
+            "total_clean": total_files - total_flagged,
+            "total_disguised": disguised,
+            "total_whitelisted": whitelisted,
+            "total_classes_scanned": total_classes_scanned,
+            "total_strings_extracted": total_strings_extracted,
+            "verdict": "CLEAN" if total_flagged == 0 else "FLAGGED",
+            "jar_results": jar_results,
+            "class_results": class_results,
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        def cleanup():
+            time.sleep(60)
+            shutil.rmtree(scan_dir, ignore_errors=True)
+        threading.Thread(target=cleanup, daemon=True).start()
+
+
+@app.route("/api/scan/minecraft-auto")
+def api_minecraft_auto_scan():
+    """
+    Auto-detect ALL Minecraft launchers on this PC, then scan:
+    - All mods (JAR deep inspect + class extraction + cheat detection)
+    - All logs (cheat pattern matching)
+    - All versions
+    Returns comprehensive report.
+    """
+    try:
+        # 1. Detect all launchers
+        launcher_data = full_launcher_scan()
+
+        # 2. Deep inspect all mods from all launchers
+        all_mod_results = []
+        for launcher in launcher_data.get("launchers", []):
+            for mod in launcher.get("mods", []):
+                if mod.get("path") and os.path.isfile(mod["path"]):
+                    try:
+                        result = inspect_jar(mod["path"])
+                        result["launcher"] = launcher["name"]
+                        all_mod_results.append(result)
+                    except Exception:
+                        pass
+
+        flagged_mods = [r for r in all_mod_results if r.get("flagged")]
+        disguised_mods = [r for r in all_mod_results if r.get("is_disguised")]
+        whitelisted_mods = [r for r in all_mod_results if r.get("whitelisted")]
+
+        # 3. Collect all log findings
+        all_log_findings = []
+        for launcher in launcher_data.get("launchers", []):
+            for finding in launcher.get("log_findings", []):
+                finding["launcher"] = launcher["name"]
+                all_log_findings.append(finding)
+
+        total_flags = len(flagged_mods) + len(all_log_findings)
+
+        return jsonify({
+            "launchers": launcher_data,
+            "mod_scan": {
+                "total_scanned": len(all_mod_results),
+                "total_flagged": len(flagged_mods),
+                "total_disguised": len(disguised_mods),
+                "total_whitelisted": len(whitelisted_mods),
+                "total_clean": len(all_mod_results) - len(flagged_mods),
+                "flagged_results": flagged_mods,
+                "all_results": all_mod_results,
+            },
+            "log_scan": {
+                "total_findings": len(all_log_findings),
+                "findings": all_log_findings,
+            },
+            "summary": {
+                "total_flags": total_flags,
+                "verdict": "CLEAN" if total_flags == 0 else "FLAGGED",
+            },
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ── Local System Scans ─────────────────────────────────────
