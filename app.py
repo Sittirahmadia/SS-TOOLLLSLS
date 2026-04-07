@@ -528,11 +528,21 @@ def api_analyze_text():
 
 # ── Main ───────────────────────────────────────────────────
 
+def start_flask(port):
+    """Start Flask in a background thread (no output, production mode)."""
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    debug = os.environ.get("DEBUG", "0") == "1"
+    mode = os.environ.get("MODE", "desktop")  # "desktop" or "web"
 
-    print(f"""
+    if mode == "web":
+        # Web-only mode (no GUI window)
+        print(f"""
 ╔══════════════════════════════════════════════════════════╗
 ║              SS TOOLS NATIVE v2.0.0                      ║
 ║          Minecraft Screen Share Scanner                  ║
@@ -540,6 +550,42 @@ if __name__ == "__main__":
 ║  Web UI:  http://localhost:{port}                         ║
 ║  API:     http://localhost:{port}/api/info                ║
 ╚══════════════════════════════════════════════════════════╝
-    """)
+        """)
+        app.run(host="0.0.0.0", port=port, debug=False)
+    else:
+        # Desktop mode — native window, no browser needed
+        try:
+            import webview
 
-    app.run(host="0.0.0.0", port=port, debug=debug)
+            # Start Flask server in background thread
+            flask_thread = threading.Thread(
+                target=start_flask, args=(port,), daemon=True
+            )
+            flask_thread.start()
+
+            # Wait for Flask to be ready
+            import urllib.request
+            for _ in range(50):
+                try:
+                    urllib.request.urlopen(f"http://127.0.0.1:{port}/api/info", timeout=1)
+                    break
+                except Exception:
+                    time.sleep(0.1)
+
+            # Open native window
+            webview.create_window(
+                "SS Tools Native v2.0",
+                f"http://127.0.0.1:{port}",
+                width=1400,
+                height=900,
+                min_size=(900, 600),
+                resizable=True,
+                text_select=True,
+            )
+            webview.start(debug=False)
+
+        except ImportError:
+            # pywebview not available — fall back to browser
+            print("[!] pywebview not installed, falling back to browser mode")
+            print(f"    Open http://localhost:{port} in your browser")
+            app.run(host="0.0.0.0", port=port, debug=False)
