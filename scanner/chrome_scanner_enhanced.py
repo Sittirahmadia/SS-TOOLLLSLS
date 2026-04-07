@@ -16,8 +16,9 @@ from pathlib import Path
 from datetime import datetime, timedelta
 
 
-# Adult/Pornographic website domains
+# Adult/Pornographic website domains - COMPREHENSIVE LIST
 ADULT_DOMAINS = {
+    # Major adult sites
     "pornhub.com", "xvideos.com", "xnxx.com", "redtube.com", "youporn.com",
     "xhamster.com", "spankbang.com", "pornoxo.com", "beeg.com", "porno.com",
     "tube8.com", "xtube.com", "slutload.com", "extremetube.com", "thumbzilla.com",
@@ -25,7 +26,25 @@ ADULT_DOMAINS = {
     "4tube.com", "xxx.com", "livejasmin.com", "myfreecams.com", "chaturbate.com",
     "cam4.com", "camsoda.com", "flirt4free.com", "xmatch.com", "adultfriendfinder.com",
     "ifeelmyself.com", "lustfulvideos.com", "sexyflix.com", "video.severin.su",
-    "bokep.com", "bokepindo.net", "bokepbarat.com", "situs bokep", "jav", "javhdporn",
+    
+    # Hentai/Anime adult sites - USER PROVIDED
+    "drbokep.com", "nhentai.net", "nhentai.com", "erome.com",
+    "truyen-hentai.co.uk", "myhentaicomics.com", "liveomek2.cam",
+    "ohentai.org", "3hentai.net", "xanimu.com", "hentaixcosmic.com",
+    "wporncomics.com", "hentailoop.com", "hentaiforce.net", "fikfap.com",
+    "hentaixyuri.com", "en.thehentai.net",
+    
+    # Underrated sites - USER PROVIDED
+    "rapelust.com", "darknessporn.com", "adultdeepfakes.com", "mat6tube.com",
+    "faphouse.tv", "doujinrepublic.com",
+    
+    # Underground sites - USER PROVIDED
+    "bokeplot.in", "manga18fx.com", "xrares.com", "motherless.com",
+    "inhumanity.com", "crazyshit.com", "manysex.com",
+    
+    # Indonesian bokep sites
+    "bokep.com", "bokepindo.net", "bokepbarat.com", "bokepindo69.live",
+    "situs bokep", "jav", "javhdporn",
 }
 
 # Suspicious domains for different categories
